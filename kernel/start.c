@@ -2,22 +2,35 @@
 #include "param.h"
 #include "riscv.h"
 #include "memlayout.h"
+#include "defs.h"
 
-extern void main();
+// entry.S 为每个处理器分配内核栈空间
+__attribute__ ((aligned (16))) char stack0[4096 * NCPU];
 
-void timerinit(void);
-extern void timervec(void);
-uint64 timer_scratch[NCPU][5]; // 计时器中断暂存状态
+// 为每个处理器生成时钟中断
+void timerinit(void) {
+	// 启用监督者模式的时钟中断
+	w_mie(r_mie() | MIE_STIE);
 
-void start(void) 
-{
+	// 开启 SSTC 拓展（如时钟比较功能）
+	w_menvcfg(r_menvcfg() | (1L << 63));
+
+	// 允许监督者模式使用时钟比较
+	w_mcounteren(r_mcounteren() | 2);
+
+	// 请求第一次时钟中断
+	w_stimecmp(r_time() + 1000000);
+}
+
+// entry.S 在机器模式下跳转到此处
+void start(void) {
 	// 设置既往模式为监督模式
 	uint64 x = r_mstatus();
 	x &= ~MSTATUS_MPP_MASK;
 	x |= MSTATUS_MPP_S;
 	w_mstatus(x);
 
-	// 设置异常程序为main
+	// 设置异常程序为 main
 	// 需要 gcc -mcmodel=medany
 	w_mepc((uint64)main);
 
@@ -34,35 +47,14 @@ void start(void)
 	w_pmpaddr0(0x3fffffffffffffull);
 	w_pmpcfg0(0xf);
 	
-	// 初始化时钟中断 
+	// 初始化时钟中断
 	timerinit();
 
 	// 把 CPU'id 存入 tp 寄存器
-	w_tp(r_mhartid());
+	int id = r_mhartid();
+	w_tp(id);
 
 	// 转换到跳转到监督者
 	// 跳转到 main 函数模式下的main
 	asm volatile("mret");
-}
-
-void timerinit(void) 
-{
-	// 获得处理器编号
-	int id = r_mhartid();
-
-	// 设置中断间隔为1000000个时钟周期（about 0.1s in qemu）
-	// 设置下一个时钟中断时刻
-	int interval = 1000000;
-	*(uint64*)CLINT_MTIMECMP(id) = *(uint64*)CLINT_MTIME + interval;
-
-	// 暂存中断时间和间隔
-	uint64 *scratch = &timer_scratch[id][0];
-	scratch[3] = CLINT_MTIMECMP(id);
-	scratch[4] = interval;
-	w_mscratch((uint64)scratch);
-
-	// 启用机器模式下时钟中断
-	w_mtvec((uint64)timervec);
-	w_mstatus(r_mstatus() | MSTATUS_MIE);
-	w_mie(r_mie() | MIE_MTIE);
 }

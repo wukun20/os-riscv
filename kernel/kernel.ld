@@ -13,44 +13,48 @@ SECTIONS
 	* 代码段（4kB 对齐）
 	*/
 	.text : {
-		*(.text)
+		*(.text .text.*)
 		. = ALIGN(0x1000);
+		PROVIDE(etext = .);
 	}
     
 	/*
 	* 只读数据段（16B 对齐）
 	*/
 	.rodata : {
-		*(.rodata)
 		. = ALIGN(16);
+		*(.srodata .sradata.*)
+		. = ALIGN(16);
+		*(.rodata .radata.*)
 	}
 
 	/*
 	* 数据段（16B 对齐）
 	*/
 	.data : {
-		*(.data)
 		. = ALIGN(16);
+		*(.sdata .sdata.*)
+		. = ALIGN(16);
+		*(.data .data.*)
 	}
 
 	/*
 	* 未初始化数据段（16B 对齐）
 	*/
 	.bss : {
-		*(.bss)
-	. = ALIGN(16);
-	}
+		. = ALIGN(16);
+		*(.sbss .sbss.*)
+		. = ALIGN(16);
+		*(.bss .bss.*)
+	}52
     	
 	/*
 	* 动态链接信息段（16B 对齐）
 	*/
 	.got : {
-		*(.got .got.*)
 		. = ALIGN(16);
+		*(.got .got.*)
 	}
 
-	/*
-	* 之后为栈空间开辟地址* 
-	*/
-	PROVIDE(stack0 = .);
+	PROVIDE(end = .);
 }

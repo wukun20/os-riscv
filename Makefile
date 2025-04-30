@@ -19,7 +19,7 @@ AS = $(TOOLPREFIX)as
 LD = $(TOOLPREFIX)ld
 OBJDUMP = $(TOOLPREFIX)objdump
 
-GDB = gdb-multiarch
+GDB = riscv64-unknown-elf-gdb
 
 # 基础配置
 QEMUOPTS = -machine virt -cpu rv64 -bios none -m 128M -smp 1 -nographic
@@ -30,17 +30,24 @@ QEMUOPTS +=
 # 网络配置
 QEUMOPTS +=
 
-# 定义编译器选项 Compiler Flags
-# 启用所有警告并视为错误
-# 启用编译器优化但是不能省略桢指针
-# 生成调试信息
-CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb
-
-# 禁止依赖宿主环境与标准库
-CFLAGS += -ffreestanding -nostdlib
-
+# 定义编译器选项 Compiler Flags，启用所有警告并视为错误
+# 启用编译器优化但是不能省略桢指针，生成调试信息
+CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2
+# 自动生成依赖文件
+CFLAGS += -MD
 # 支持64位地址
 CFLAGS += -mcmodel=medany
+# 将未初始化全局变量设为强符号，不依赖标准库
+CFLAGS += -fno-common -nostdlib
+# 禁用内建函数
+CFLAGS += -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset
+CFLAGS += -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero
+CFLAGS += -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc
+CFLAGS += -fno-builtin-free
+CFLAGS += -fno-builtin-memcpy -Wno-main
+CFLAGS += -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf
+# 将该文件加入搜索头文件
+CFLAGS += -I.
 
 # 定义汇编器选项
 ASFLAGS = 

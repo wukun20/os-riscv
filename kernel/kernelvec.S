@@ -1,4 +1,5 @@
-# 保存并恢复异常或中断前状态
+# 保存并恢复内核程序异常或中断前状态
+
 .extern kerneltrap
 .globl kernelvec
 .align 4
@@ -37,6 +38,8 @@ kernelvec:
 	sd t5, 232(sp)
 	sd t6, 240(sp)
 
+	# 内核程序产生的异常与中断跳转到此
+	# 位于 trap.c
 	call kerneltrap
 
 	ld ra, 0(sp)
@@ -74,7 +77,7 @@ kernelvec:
 
 	sret
 		
-# 机器模式计时器中断
+# 机器模式时钟中断
 .globl timervec
 .align 4
 timervec:

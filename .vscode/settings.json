@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "riscv.h": "c",
+        "limits": "cpp",
+        "stdarg.h": "c",
+        "spinlock.h": "c",
+        "typeinfo": "c",
+        "defs.h": "c"
+    }
+}

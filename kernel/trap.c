@@ -1,4 +1,3 @@
-void kerneltrap(void) 
-{
+void kerneltrap(void) {
 	while(1);
 }

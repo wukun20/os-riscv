@@ -6,13 +6,13 @@ Disassembly of section .text:
 
 0000000080000000 <_entry>:
     80000000:	00001117          	auipc	sp,0x1
-    80000004:	03813103          	ld	sp,56(sp) # 80001038 <_GLOBAL_OFFSET_TABLE_+0x8>
+    80000004:	0e813103          	ld	sp,232(sp) # 800010e8 <_GLOBAL_OFFSET_TABLE_+0x8>
     80000008:	6505                	lui	a0,0x1
     8000000a:	f14025f3          	csrr	a1,mhartid
     8000000e:	0585                	addi	a1,a1,1
     80000010:	02b50533          	mul	a0,a0,a1
     80000014:	912a                	add	sp,sp,a0
-    80000016:	076000ef          	jal	ra,8000008c <start>
+    80000016:	076000ef          	jal	8000008c <start>
 
 000000008000001a <spin>:
     8000001a:	a001                	j	8000001a <spin>
@@ -46,7 +46,8 @@ static inline uint64 r_mhartid(void)
     8000002e:	02004737          	lui	a4,0x2004
     80000032:	97ba                	add	a5,a5,a4
     80000034:	0200c737          	lui	a4,0x200c
-    80000038:	ff873703          	ld	a4,-8(a4) # 200bff8 <_entry-0x7dff4008>
+    80000038:	1761                	addi	a4,a4,-8 # 200bff8 <_entry-0x7dff4008>
+    8000003a:	6318                	ld	a4,0(a4)
     8000003c:	000f4637          	lui	a2,0xf4
     80000040:	24060613          	addi	a2,a2,576 # f4240 <_entry-0x7ff0bdc0>
     80000044:	9732                	add	a4,a4,a2
@@ -58,7 +59,7 @@ static inline uint64 r_mhartid(void)
     8000004c:	96ae                	add	a3,a3,a1
     8000004e:	068e                	slli	a3,a3,0x3
     80000050:	00001717          	auipc	a4,0x1
-    80000054:	fb070713          	addi	a4,a4,-80 # 80001000 <timer_scratch>
+    80000054:	06070713          	addi	a4,a4,96 # 800010b0 <timer_scratch>
     80000058:	9736                	add	a4,a4,a3
 	scratch[3] = CLINT_MTIMECMP(id);
     8000005a:	ef1c                	sd	a5,24(a4)
@@ -73,7 +74,7 @@ static inline void w_mscratch(uint64 x)
     8000005e:	34071073          	csrw	mscratch,a4
   asm volatile("csrw mtvec, %0" : : "r" (x));
     80000062:	00001797          	auipc	a5,0x1
-    80000066:	fe67b783          	ld	a5,-26(a5) # 80001048 <_GLOBAL_OFFSET_TABLE_+0x18>
+    80000066:	0967b783          	ld	a5,150(a5) # 800010f8 <_GLOBAL_OFFSET_TABLE_+0x18>
     8000006a:	30579073          	csrw	mtvec,a5
     asm volatile("csrr %0, mstatus" : "=r" (x));
     8000006e:	300027f3          	csrr	a5,mstatus
@@ -106,7 +107,7 @@ static inline void w_mscratch(uint64 x)
     80000094:	300027f3          	csrr	a5,mstatus
 	x &= ~MSTATUS_MPP_MASK;
     80000098:	7779                	lui	a4,0xffffe
-    8000009a:	7ff70713          	addi	a4,a4,2047 # ffffffffffffe7ff <stack0+0xffffffff7fffd79f>
+    8000009a:	7ff70713          	addi	a4,a4,2047 # ffffffffffffe7ff <stack0+0xffffffff7fffd6ef>
     8000009e:	8ff9                	and	a5,a5,a4
 	x |= MSTATUS_MPP_S;
     800000a0:	6705                	lui	a4,0x1
@@ -116,7 +117,7 @@ static inline void w_mscratch(uint64 x)
     800000a8:	30079073          	csrw	mstatus,a5
     asm volatile("csrw mepc, %0" : : "r" (x));
     800000ac:	00001797          	auipc	a5,0x1
-    800000b0:	f947b783          	ld	a5,-108(a5) # 80001040 <_GLOBAL_OFFSET_TABLE_+0x10>
+    800000b0:	0447b783          	ld	a5,68(a5) # 800010f0 <_GLOBAL_OFFSET_TABLE_+0x10>
     800000b4:	34179073          	csrw	mepc,a5
     asm volatile("csrw satp, %0" : : "r" (x));
     800000b8:	4781                	li	a5,0
@@ -141,7 +142,7 @@ static inline void w_mscratch(uint64 x)
     800000de:	47bd                	li	a5,15
     800000e0:	3a079073          	csrw	pmpcfg0,a5
 	timerinit();
-    800000e4:	f39ff0ef          	jal	ra,8000001c <timerinit>
+    800000e4:	f39ff0ef          	jal	8000001c <timerinit>
 	asm volatile("csrr %0, mhartid" : "=r" (x));
     800000e8:	f14027f3          	csrr	a5,mhartid
   asm volatile("mv tp, %0" : : "r" (x));
@@ -190,7 +191,7 @@ static inline void w_mscratch(uint64 x)
     8000013a:	f1f6                	sd	t4,224(sp)
     8000013c:	f5fa                	sd	t5,232(sp)
     8000013e:	f9fe                	sd	t6,240(sp)
-    80000140:	07a000ef          	jal	ra,800001ba <kerneltrap>
+    80000140:	07a000ef          	jal	800001ba <kerneltrap>
     80000144:	6082                	ld	ra,0(sp)
     80000146:	6122                	ld	sp,8(sp)
     80000148:	61c2                	ld	gp,16(sp)
@@ -266,12 +267,12 @@ void main(void)
     800001c6:	0800                	addi	s0,sp,16
 	if(started == 0) {
     800001c8:	00001797          	auipc	a5,0x1
-    800001cc:	e607a783          	lw	a5,-416(a5) # 80001028 <started>
+    800001cc:	f107a783          	lw	a5,-240(a5) # 800010d8 <started>
     800001d0:	eb89                	bnez	a5,800001e2 <main+0x20>
 		started = 1;
     800001d2:	4785                	li	a5,1
     800001d4:	00001717          	auipc	a4,0x1
-    800001d8:	e4f72a23          	sw	a5,-428(a4) # 80001028 <started>
+    800001d8:	f0f72223          	sw	a5,-252(a4) # 800010d8 <started>
 	} else {
 		started = 0;
 	}
@@ -281,7 +282,7 @@ void main(void)
     800001e0:	8082                	ret
 		started = 0;
     800001e2:	00001797          	auipc	a5,0x1
-    800001e6:	e407a323          	sw	zero,-442(a5) # 80001028 <started>
+    800001e6:	ee07ab23          	sw	zero,-266(a5) # 800010d8 <started>
 }
     800001ea:	bfcd                	j	800001dc <main+0x1a>
 	...
