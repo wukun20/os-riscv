@@ -36,7 +36,7 @@
 #define PLIC_MCLAIM(hart) (PLIC + 0x200004 + (hart)*0x2000)
 #define PLIC_SCLAIM(hart) (PLIC + 0x201004 + (hart)*0x2000)
 
-// RAM memory:
+// virtual memory:
 // text
 // data and bss
 // fixed-size stack
@@ -46,8 +46,8 @@
 // TRAPFRAME
 // TRAMPOLINE
 
-// RAM 物理地址范围
-#define KERNBASE = 0x80000000L;
+// 虚拟地址范围
+#define KERNBASE 0x80000000L
 #define PHYSTOP (KERNBASE + MEMSIZE)
 
 // 从地址最高位起，
@@ -55,4 +55,4 @@
 // 绷床页、陷阱帧、内核栈
 #define TRAMPOLINE (MAXVA - PGSIZE)
 #define TRAPFRAME (TRAMPOLINE - PGSIZE)
-#define KSTACK(p) (TRAMPOLINE - (p + 1) * 2 * PGSIZE)
+#define KSTACK(p) (TRAMPOLINE - ((p) + 1) * 2 * PGSIZE)

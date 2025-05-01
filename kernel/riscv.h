@@ -1,3 +1,4 @@
+#include "param.h"
 #include "types.h"
 
 #ifndef __ASSEMBLER__ // 避免编译器错误解析
@@ -14,7 +15,7 @@ static inline uint64 r_mhartid(void) {
 #define MSTATUS_MPP_MASK (3L << 11) // previous mode.
 #define MSTATUS_MPP_M (3L << 11)
 #define MSTATUS_MPP_S (1L << 11)
-#define MSTATUS_MPP_U (0L << 11)
+#define MSTATUS_MPP_U (0L << 11)#define PGROUNDUP(sz)  (((sz)+PGSIZE-1) & ~(PGSIZE-1))
 #define MSTATUS_MIE (1L << 3)    // machine-mode interrupt enable.
 
 static inline uint64 r_mstatus(void) {
@@ -144,7 +145,7 @@ static inline uint64 r_stvec(void) {
 
 static inline uint64 r_stimecmp(void) {
     uint64 x;
-    // asm volatile("csrr %0, stimecmp" : "=r" (x) );
+    // asm volatile("csrr %0, stimecmp" : "=r" (x));
     asm volatile("csrr %0, 0x14d" : "=r" (x));
     return x;
 }
@@ -158,7 +159,7 @@ static inline void w_stimecmp(uint64 x) {
 
 static inline uint64 r_menvcfg(void) {
     uint64 x;
-    // asm volatile("csrr %0, menvcfg" : "=r" (x) );
+    // asm volatile("csrr %0, menvcfg" : "=r" (x));
     asm volatile("csrr %0, 0x30a" : "=r" (x));
     return x;
 }
@@ -244,7 +245,7 @@ static inline int intr_get(void) {
 
 static inline uint64 r_sp(void) {
     uint64 x;
-    asm volatile("mv %0, sp" : "=r" (x) );
+    asm volatile("mv %0, sp" : "=r" (x));
     return x;
 }
 
@@ -277,7 +278,11 @@ typedef uint64 *pagetable_t; // 512 PTEs
 
 #endif // __ASSEMBLER__
 
-// 最高虚拟地址
-// 为了避免高位的符号拓展问题，
-// 比 Sv39 方案能达到的地址少一位
-#define MAXVA (1L << (9 + 9 + 9 + 12 - 1))
+// 页对齐操作
+#define PGROUNDUP(sz) (((sz) + PGSIZE - 1) & ~ (PGSIZE - 1))
+#define PGROUNDDOWN(a) ((a) & ~ (PGSIZE - 1))
+
+// 从虚拟地址中取三个9位页表索引
+#define PXMASK 0x1FF // 9 bits
+#define PXSHIFT(level) (PGSHIFT + (9 * (level)))
+#define PX(level, va) (((va) >> (PXSHIFT(level))) & PXMASK)

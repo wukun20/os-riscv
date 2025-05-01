@@ -1,3 +1,5 @@
+#include "types.h"
+
 struct spinlock;
 struct cpu;
 struct proc;
@@ -9,18 +11,19 @@ struct proc;
 void            main(void);
 
 // print.c
+void            *memset(void *, int, uint);
 void            printfinit(void);
-int             printf(char*, ...);
-void            panic(char*);
+int             printf(char *, ...);
+void            panic(char *);
 
 // proc.c
 int             cpuid(void);
-struct cpu*     mycpu(void);
-struct proc*    myproc(void);
+struct cpu      *mycpu(void);
+struct proc     *myproc(void);
 void            scheduler(void);
 void            yield(void);
-void            sleep(void*, struct spinlock*);
-void            wakeup(void*);
+void            sleep(void *, struct spinlock *);
+void            wakeup(void *);
 
 // spinlock.c
 void            initlock(struct spinlock *, char *);
