@@ -1,3 +1,6 @@
+#include "param.h"
+#include "riscv.h"
+
 // 物理内存布局
 
 // According to qemu's hw/riscv/virt.c:
@@ -35,17 +38,21 @@
 
 // RAM memory:
 // text
-// original data and bss
+// data and bss
 // fixed-size stack
 // expandable heap
 // ...
+// KSTACK
 // TRAPFRAME
 // TRAMPOLINE
 
 // RAM 物理地址范围
-#define KERNBASE 0x80000000L
-#define PHYSTOP (KERNBASE + 128*1024*1024)
+#define KERNBASE = 0x80000000L;
+#define PHYSTOP (KERNBASE + MEMSIZE)
 
-// 映射蹦床页和陷阱帧到地址高位
+// 从地址最高位起，
+// 由高至低依次映射：
+// 绷床页、陷阱帧、内核栈
 #define TRAMPOLINE (MAXVA - PGSIZE)
 #define TRAPFRAME (TRAMPOLINE - PGSIZE)
+#define KSTACK(p) (TRAMPOLINE - (p + 1) * 2 * PGSIZE)

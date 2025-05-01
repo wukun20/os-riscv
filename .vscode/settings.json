@@ -5,6 +5,8 @@
         "stdarg.h": "c",
         "spinlock.h": "c",
         "typeinfo": "c",
-        "defs.h": "c"
+        "defs.h": "c",
+        "file.h": "c",
+        "param.h": "c"
     }
 }

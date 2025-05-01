@@ -39,4 +39,6 @@ struct devsw {
     int (*write)(int, uint64, int);
 };
 
+// 对外暴露 file.c 中的数组
+extern struct devsw devsws[];
 

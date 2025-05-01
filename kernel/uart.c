@@ -7,6 +7,8 @@
 #include "spinlock.h"
 #include "types.h"
 
+extern volatile int panicked; // from printf.c
+
 // UART 控制寄存器已经映射到内存 UART0 
 #define Reg(reg) ((volatile unsigned char *)(UART0 + (reg)))
 
@@ -36,7 +38,7 @@ static struct {
     struct spinlock lock;
     char buf[UART_TX_BUF_SIZE];
     uint64 read;    // 下一个读出缓存的位置
-    uint64 write;   // 下一个写入缓存的位置
+    uint64 write;   // LSR_TX_IDLE下一个写入缓存的位置
 } uarttx;
 
 void uartinit(void) {
@@ -66,27 +68,75 @@ void uartinit(void) {
 static void uartstart(void) {
     while(1) {
         // 传输缓冲区为空，读取重置中断标志位
-        if(uarttx.write == uarttx.read) {
+        if(uarttx.read == uarttx.write) {
             ReadReg(ISR);
             return;
         }
-
         // 发送保持寄存器被占用，直接返回
         if((ReadReg(LSR) & LSR_TX_IDLE) == 0) {
             return;
         }
-
         int c = uarttx.buf[uarttx.read++];
         uarttx.read %= UART_TX_BUF_SIZE;
-
         // uartputc() 可能在等待缓存空位
-        wakeup(&uarttx.read);
-        
+        wakeup(&uarttx.write);
         WriteReg(THR, c);
     }
 }
 
 void uartputc(int c) {
-    
+    acquire(&uarttx.lock);
+    // 自选锁发生重入则内核恐慌
+    if(panicked) {
+        for(;;) {
+        }
+    }
+    // 缓冲区满则进入睡眠
+    while(uarttx.read == uarttx.write) {
+        sleep(&uarttx.write, &uarttx.lock);
+    }
+    // 写入缓冲区并传到设备
+    uarttx.buf[uarttx.write++] = c;
+    uarttx.write % UART_TX_BUF_SIZE;
+    uartstart();
+    release(&uarttx.lock);
 }
 
+void uartputc_sync(int c) {
+    push_off();
+    // 若内核恐慌则进入循环，关中断下会冻结系统
+    if(panicked) {
+        for(;;) { 
+        }
+    }
+    while((ReadReg(LSR) & LSR_TX_IDLE) == 0) {
+    }
+    WriteReg(THR, c);
+    pop_off();
+}
+
+// 返回读取到的字符，若无返回 -1
+int uartgetc(void) {
+    if(ReadReg(LSR) & LSR_RX_READY) {
+        return ReadReg(RHR);
+    } else {
+        return -1;
+    }
+}
+
+// 处理设备中断
+void uartintr(void) {
+    int c;
+    // 读取单个字符
+    while(1) {
+        c = uartgetc();
+        if(c == -1) {
+            break;
+        }
+        consoleintr(c);
+    }
+    // 发送缓冲区数据
+    acquire(&uarttx.lock);
+    uartstart();
+    release(&uarttx.lock);
+}

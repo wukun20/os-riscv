@@ -2,8 +2,16 @@ struct spinlock;
 struct cpu;
 struct proc;
 
+// console.c
+
+
 // main.c
 void            main(void);
+
+// print.c
+void            printfinit(void);
+int             printf(char*, ...);
+void            panic(char*);
 
 // proc.c
 int             cpuid(void);
@@ -13,7 +21,6 @@ void            scheduler(void);
 void            yield(void);
 void            sleep(void*, struct spinlock*);
 void            wakeup(void*);
-
 
 // spinlock.c
 void            initlock(struct spinlock *, char *);

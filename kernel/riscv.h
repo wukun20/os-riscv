@@ -276,3 +276,8 @@ typedef uint64 pte_t;
 typedef uint64 *pagetable_t; // 512 PTEs
 
 #endif // __ASSEMBLER__
+
+// 最高虚拟地址
+// 为了避免高位的符号拓展问题，
+// 比 Sv39 方案能达到的地址少一位
+#define MAXVA (1L << (9 + 9 + 9 + 12 - 1))

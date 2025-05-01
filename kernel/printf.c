@@ -9,6 +9,8 @@
 #include "defs.h"
 #include "spinlock.h"
 
+volatile int panicked = 0;
+
 static struct {
     struct spinlock lock;
     int locking; // 非零表示启用锁，保证程序崩溃不会占用输出通道

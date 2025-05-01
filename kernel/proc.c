@@ -7,7 +7,7 @@
 struct cpu cpus[NCPU];
 struct proc procs[NPROC];
 
-extern void swtch(); // in swtch.S
+extern void swtch(); // from swtch.S
 
 // 需要在禁止中断状态下获取处理器编号
 int cpuid(void) {
@@ -145,3 +145,43 @@ void wakeup(void *chan) {
     }
 }
 
+// 杀死编号为 pid 的进程
+// 返回 0 表示成功， -1 表示失败
+int kill(int pid) {
+    struct proc *p;
+    for(p = procs; p < &procs[NPROC]; p++) {
+        acquire(&p->lock);
+        if(p->pid == pid) {
+            p->killed = 1;
+            // 需要叫醒睡眠进程
+            if(p->state == SLEEPING) {
+                p->state == RUNNABLE;
+            }
+            release(&p->lock);
+            return 0;
+        }
+    }
+    release(&p->lock);
+    return -1;
+}
+
+// 杀死对应结构体进程
+void setkilled(struct proc *p) {
+    acquire(&p->lock);
+    p->killed = 1;
+    release(&p->lock);
+}
+
+// 查看进程生死状态
+int killed(struct proc *p) {
+    int k;
+    acquire(&p->lock);
+    k = p->killed;
+    release(&p->lock);
+    return k;
+}
+
+// 复制数据到用户或内核地址
+int either_copyout(int user_dst, uint64 dst, void *, uint64 len) {
+
+}
