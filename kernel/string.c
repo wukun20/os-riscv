@@ -29,11 +29,9 @@ int memcmp(const void *v1, const void *v2, uint n) {
 void *memmove(void *dst, const void *src, uint n) {
     char *d;
     const char *s;
-
     if(n == 0) {
         return dst;
     }
-
     d = dst;
     s = src;
     // 内存重叠需要从后向前复制

@@ -6,6 +6,8 @@ struct proc;
 
 // console.c
 
+// kalloc.c
+void            kfree(void *);
 
 // main.c
 void            main(void);
@@ -32,6 +34,10 @@ void            pop_off(void);
 int             holding(struct spinlock *);
 void            acquire(struct spinlock *);
 void            release(struct spinlock *);
+
+// string.c
+void            *memmove(void *, const void *, uint);
+void            *memset(void *, int, uint);
 
 // uart.c
 void            uartinit(void);

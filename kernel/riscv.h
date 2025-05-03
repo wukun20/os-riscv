@@ -286,3 +286,15 @@ typedef uint64 *pagetable_t; // 512 PTEs
 #define PXMASK 0x1FF // 9 bits
 #define PXSHIFT(level) (PGSHIFT + (9 * (level)))
 #define PX(level, va) (((va) >> (PXSHIFT(level))) & PXMASK)
+
+// 从页表项中取出不同标识符
+#define PTE_V (1L << 0) // 有效
+#define PTE_R (1L << 1) // 可读
+#define PTE_W (1L << 2) // 可写 
+#define PTE_X (1L << 3) // 可执行
+#define PTE_U (1L << 4) // 用户模式可用
+
+// 页表项和物理页转换
+#define PA2PTE(pa) (((pa) >> 12) << 10)
+#define PTE2PA(pte) (((pte) >> 10) << 12)
+#define PTE_FLAGS(pte) ((pte) & 0x3FF)

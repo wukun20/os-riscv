@@ -16,7 +16,7 @@ static struct {
 } kmem;
 
 // 添加一页进入空闲页表
-void kfreee(void *pa) {
+void kfree(void *pa) {
     struct run *r;
     if((uint64)pa % PGSIZE != 0 || (char *)pa < end || (uint64)pa >= PHYSTOP) {
         panic("kfree");
@@ -45,6 +45,7 @@ void kinit(void) {
 }
 
 // 取出空闲页表头部
+// 返回分配的页面首地址
 // 返回 0 表示没有可分别配的空闲页
 void *kalloc(void) {
     struct run *r;
