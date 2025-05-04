@@ -269,40 +269,111 @@ void uvmclear(pagetable_t pagetable, uint64 va) {
     *pte &= ~PTE_V;
 }
 
-// 从内核拷贝数据到用户
+// 从内核空间拷贝数据到用户空间
 // 成功返回 0，失败返回 -1
 int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len) {
     pte_t *pte;
-    uint64 va, n, offset, pa;
+    uint64 va0, n, offset, pa0;
     while(len > 0) {
         // 计算页面的初始位置及页内偏移量
-        va = PGROUNDDOWN(dstva);
-        offset = dstva - va;
+        va0 = PGROUNDDOWN(dstva);
+        offset = dstva - va0;
 
-        if(va >= MAXVA) {
+        if(va0 >= MAXVA) {
             return -1;
         }
-        pte = walk(pagetable, va, 0);
+        pte = walk(pagetable, va0, 0);
         if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_W) == 0 || 
             (*pte & PTE_U) == 0) {
             return -1;
         }
-        pa = PTE2PA(*pte);
+        pa0 = PTE2PA(*pte);
 
 
         // 计算当前页面需要复制多少字节
-        n = PGSIZE - (dstva - va);
-        if(len < n) {
+        n = PGSIZE - (dstva - va0);
+        if(n > len) {
             n = len;
         }
 
-        memmove((void *)(pa + offset), (void *)src, n);
+        memmove((void *)(pa0 + offset), (void *)src, n);
         src += n;
         len -= n;
-        dstva = va + PGSIZE;
+        dstva = va0 + PGSIZE;
     }
     return 0;
 }
 
+// 从用户空间拷贝数据到内核空间
+// 成功返回 0，失败返回 -1
+int copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len) {
+    uint64 va0, offset, pa0, n;
+    while(len > 0) {
+        // 找到页面起始位置及偏移量
+        va0 = PGROUNDDOWN(srcva);
+        if(va0 >= MAXVA) {
+            return -1;
+        }
+        offset = srcva - va0;
+
+        pa0 = walkaddr(pagetable, va0);
+        if(pa0 == 0) {
+            return -1;
+        }
+
+        // 计算当前页面需要复制多少字节
+        n = PGSIZE - (srcva - va0);
+        if(n > len) {
+            n = len;
+        }
+
+        memmove((void *)dst, (void *)(pa0 + offset), n);
+        dst += n;
+        srcva += n;
+        len -= n;
+        
+    }
+    return 0;
+}
+
+// 从用户空间拷贝字符串到内核空间
+// 直到遇到零字符或达到最大值
+// 遇到零字符结束则返回 0
+int copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max) {
+    uint64 va0, pa0, offset, n;
+    char *p;
+    int is_null = 0;
+    while(max > 0 && is_null == 0) {
+        va0 = PGROUNDDOWN(srcva);
+        if(va0 >= MAXVA) {
+            return -1;
+        }
+        pa0 = walkaddr(pagetable, va0);
+        if(pa0 == 0) {
+            return -1;
+        }
+        n = PGSIZE - (srcva - va0);
+        if(n > max) {
+            n = max;
+        }
+        while(n > 0) {
+            offset = srcva - va0;
+            p = (char *)(srcva + offset);
+            *dst = *p;
+            if(*p == '\0') {
+                is_null = 1;
+                break;
+            }
+            dst++;
+            srcva++;
+            n--;
+            max--;
+        }
+    }
+    if(is_null == 0) {
+        return -1;
+    }
+    return 0;
+}
 
 
